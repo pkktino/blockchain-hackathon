@@ -114,42 +114,38 @@ contract PharmaChain {
     
     function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public {
         require(isDoctor(msg.sender), "Only doctor role is allowed to add medicine to prescriptions");
-        Prescription storage prescription = prescriptions[_id];
         require(isPrescriptionAssigner(msg.sender, _id), "Only assigned doctor can add medicine to prescriptions");
-        if (prescription.orderedMeds[_medicineName] <= 0) {
-            prescription.medicines.push(_medicineName);
+        if (prescriptions[_id].orderedMeds[_medicineName] <= 0) {
+            prescriptions[_id].medicines.push(_medicineName);
         }
-        prescription.orderedMeds[_medicineName].add(_amount);
+        prescriptions[_id].orderedMeds[_medicineName].add(_amount);
     }
 
     function setDelegator(uint _pid, address _delegator) public {
         require(isPatient(msg.sender), "Only patient can set prescription delegator");
-        Prescription storage prescription = prescriptions[_pid];
-        require(prescription.owner == msg.sender, "Only owner can set delegator");
-        prescription.delegate = _delegator;
+        require(prescriptions[_pid].owner == msg.sender, "Only owner can set delegator");
+        prescriptions[_pid].delegate = _delegator;
     }
 
     function sellMedicine(uint _pid, address _buyer, string _medicineName, uint _amount) public returns (bool) {
         require(isPrescriptionOwner(_buyer, _pid), "Only owner or delegator can buy drugs");
-        Prescription storage prescription = prescriptions[_pid];
-        uint received = prescription.receivedMeds[_medicineName];
-        uint ordered = prescription.orderedMeds[_medicineName];
+        uint received = prescriptions[_pid].receivedMeds[_medicineName];
+        uint ordered = prescriptions[_pid].orderedMeds[_medicineName];
         require(received.add(_amount) <= ordered, "Cannot buy more than ordered");
-        prescription.receivedMeds[_medicineName] = received.add(_amount);
-        prescription.assignedPharmacy.push(msg.sender);
-        prescription.hasPharmacy[msg.sender] = true;
+        prescriptions[_pid].receivedMeds[_medicineName] = received.add(_amount);
+        prescriptions[_pid].assignedPharmacy.push(msg.sender);
+        prescriptions[_pid].hasPharmacy[msg.sender] = true;
     }
 
     // Readonly functions
     function getPrescription(uint id) public view returns (string, string, string[], uint[]){
         if (id <= prescriptions.length) {
-            Prescription storage _data = prescriptions[id];
-            string memory _name = accounts[accountOwner[_data.owner]].name;
-            string memory _assignDoctor = accounts[accountOwner[_data.assignedDoctor]].name;
-            string[] memory _medicines = _data.medicines;
+            string memory _name = accounts[accountOwner[prescriptions[id].owner]].name;
+            string memory _assignDoctor = accounts[accountOwner[prescriptions[id].assignedDoctor]].name;
+            string[] memory _medicines = prescriptions[id].medicines;
             uint[] memory _orderedMeds;
             for(uint i = 0 ; i < _medicines.length ; i++){
-                _orderedMeds[i] = _data.orderedMeds[_medicines[i]];
+                _orderedMeds[i] = prescriptions[id].orderedMeds[_medicines[i]];
             }
             return (_name,_assignDoctor,_medicines,_orderedMeds);
         }
