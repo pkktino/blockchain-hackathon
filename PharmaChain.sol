@@ -94,6 +94,9 @@ contract PharmaChain {
     
     Account[] accounts;
     Prescription[] prescriptions;
+
+    mapping(address => uint[]) historyIdList;
+    mapping(address => mapping(uint => bool)) isInHistory;
     
     function registerAccount(string _name, string _role) public {
         require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
@@ -109,6 +112,8 @@ contract PharmaChain {
     function createPrescription(address _owner) public returns (uint) {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
+        addAddressToMap(msg.sender, id);
+        addAddressToMap(_owner, id);
         return (id);
     }
     
@@ -138,9 +143,14 @@ contract PharmaChain {
         prescription.receivedMeds[_medicineName] = received.add(_amount);
         prescription.assignedPharmacy.push(msg.sender);
         prescription.hasPharmacy[msg.sender] = true;
+        addAddressToMap(msg.sender, _pid);
     }
 
     // Readonly functions
+    function userGetPrescription() public view returns (uint[]) {
+        return historyIdList[msg.sender];
+    }
+
     function getPrescription(uint id) public view returns (Prescription){
         if (prescriptions[id] != nill) {
             if (isGoverment(msg.sender)) return prescriptions[id];
@@ -151,6 +161,13 @@ contract PharmaChain {
     }
 
     // Helper functions
+    function addAddressToMap(address user, uint id) internal view {
+        if (!(isInHistory[user][id])) {
+            historyIdList[user].push(id);
+            isInHistory[user][id] = true;
+        }
+    }
+
     function isGoverment(address user) internal view returns (bool) {
         return (Role.Goverment == getRoleFromAddress(user));
     }
