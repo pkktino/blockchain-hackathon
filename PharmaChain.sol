@@ -137,6 +137,7 @@ contract PharmaChain {
         uint received = prescriptions[_pid].receivedMeds[_medicineName];
         uint ordered = prescriptions[_pid].orderedMeds[_medicineName];
         require(received.add(_amount) <= ordered, "Cannot buy more than ordered");
+        Prescription storage prescription = prescriptions[_pid];
         prescription.receivedMeds[_medicineName] = received.add(_amount);
         prescription.assignedPharmacy.push(msg.sender);
         prescription.hasPharmacy[msg.sender] = true;
@@ -162,7 +163,7 @@ contract PharmaChain {
     }
 
     // Helper functions
-    function addAddressToMap(address user, uint id) internal view {
+    function addAddressToMap(address user, uint id) internal {
         if (!(isInHistory[user][id])) {
             historyIdList[user].push(id);
             isInHistory[user][id] = true;
@@ -198,8 +199,7 @@ contract PharmaChain {
     }
 
     function isPrescriptionPharmacy(address user, uint id) internal view returns (bool) {
-        Prescription memory prescription = prescriptions[id];
-        return prescription.hasPharmacy[user];
+        return prescriptions[id].hasPharmacy[user];
     }
 
     function getRoleFromAddress(address user) internal view returns (Role) {
