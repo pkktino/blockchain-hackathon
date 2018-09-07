@@ -99,6 +99,8 @@ contract PharmaChain {
 
     mapping(address => uint[]) historyIdList;
     mapping(address => mapping(uint => bool)) isInHistory;
+
+    mapping(address => uint) latestCreatePrescriptionId;
     
     address[] patientList;
     
@@ -117,14 +119,15 @@ contract PharmaChain {
         }
     }
 
-    event CreatePrescriptionEvent(address _owner, uint prescriptionId);
-    function createPrescription(address _owner) public hasRegistered returns (uint) {
+    function createPrescription(address _owner) public hasRegistered {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
+        if (prescriptions.length == 0) {
+            createDummyPrescription();
+        }
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), new uint[](0), new uint[](0), "")) - 1;
         addAddressToMap(msg.sender, id);
         addAddressToMap(_owner, id);
-        emit CreatePrescriptionEvent(_owner, id);
-        return id;
+        latestCreatePrescriptionId[msg.sender] = id;
     }
     
     function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public hasRegistered {
@@ -168,6 +171,10 @@ contract PharmaChain {
     }
 
     // Readonly functions
+    function getLatestCreatePrescriptionId() public view returns (uint) {
+        return latestCreatePrescriptionId[msg.sender];
+    }
+
     function getPatientList() public view returns (address[]) {
         return patientList;
     }
@@ -179,13 +186,18 @@ contract PharmaChain {
     function getPrescription(uint id) public hasRegistered view returns (string, string, string[], uint[], uint[]) {
         require(id <= prescriptions.length, "Invalid id");
         return (accounts[accountOwner[prescriptions[id].owner]].name,
-               accounts[accountOwner[prescriptions[id].assignedDoctor]].name, 
-               prescriptions[id].medicines,
-               prescriptions[id].orderedMeds, 
-               prescriptions[id].receivedMeds);
+                accounts[accountOwner[prescriptions[id].assignedDoctor]].name, 
+                prescriptions[id].medicines,
+                prescriptions[id].orderedMeds, 
+                prescriptions[id].receivedMeds);
     }
 
     // Helper functions
+    function createDummyPrescription() internal {
+        require(prescriptions.length == 0, "Cannot create more dummy prescription");
+        prescriptions.push(Prescription(0, 0, 0, new address[](0), new string[](0), new uint[](0), new uint[](0), ""));
+    }
+
     function addAddressToMap(address user, uint id) internal {
         if (!(isInHistory[user][id])) {
             historyIdList[user].push(id);
