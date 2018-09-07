@@ -150,6 +150,7 @@ contract PharmaChain {
         prescription.assignedPharmacy.push(msg.sender);
         prescription.hasPharmacy[msg.sender] = true;
         addAddressToMap(msg.sender, _pid);
+        return (true);
     }
 
     // Readonly functions
