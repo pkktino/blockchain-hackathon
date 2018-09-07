@@ -109,19 +109,11 @@ contract PharmaChain {
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
         return (id);
     }
-
-    function getPrescription(uint id) public view returns (Prescription){
-        if(prescriptions[id] != nill){
-            if(isGoverment(msg.sender)) return prescriptions[id];
-            else if(isPatient() && isPrescriptionOwner(msg.sender, id)) return prescriptions[id];
-            else if(isDoctor() && isPrescriptionAssigner(msg.sender, id)) return prescriptions[id];
-            else if(isPharmacy() )
-        }
-    }
     
     function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public {
         require(isDoctor(msg.sender), "Only doctor role is allowed to add medicine to prescriptions");
         Prescription storage prescription = prescriptions[_id];
+        require(isPrescriptionAssigner(msg.sender, _id), "Only assigned doctor can add medicine to prescriptions");
         if (prescription.orderedMeds[_medicineName] <= 0) {
             prescription.medicines.push(_medicineName);
         }
@@ -136,6 +128,16 @@ contract PharmaChain {
     }
 
     function sellMedicine(uint _pid, address _buyer, string _medicineName, uint amount) public {
+    }
+
+    // Readonly functions
+    function getPrescription(uint id) public view returns (Prescription){
+        if (prescriptions[id] != nill) {
+            if (isGoverment(msg.sender)) return prescriptions[id];
+            else if(isPatient() && isPrescriptionOwner(msg.sender, id)) return prescriptions[id];
+            else if(isDoctor() && isPrescriptionAssigner(msg.sender, id)) return prescriptions[id];
+            // else if(isPharmacy() )
+        }
     }
 
     // Helper functions
