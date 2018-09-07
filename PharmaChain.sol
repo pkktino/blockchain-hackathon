@@ -115,12 +115,14 @@ contract PharmaChain {
         }
     }
 
+    event CreatePrescriptionEvent(address _owner, uint prescriptionId);
     function createPrescription(address _owner) public hasRegistered returns (uint) {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
         addAddressToMap(msg.sender, id);
         addAddressToMap(_owner, id);
-        return (id);
+        emit CreatePrescriptionEvent(_owner, id);
+        return id;
     }
     
     function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public hasRegistered {
