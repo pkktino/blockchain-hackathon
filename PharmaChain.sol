@@ -89,6 +89,7 @@ contract PharmaChain {
         string remark;
         mapping(string => uint) orderedMeds;
         mapping(string => uint) receivedMeds;
+        mapping(address => bool) hasPharmacy;
     }
     
     Account[] accounts;
@@ -128,7 +129,15 @@ contract PharmaChain {
         prescription.delegate = _delegator;
     }
 
-    function sellMedicine(uint _pid, address _buyer, string _medicineName, uint amount) public {
+    function sellMedicine(uint _pid, address _buyer, string _medicineName, uint _amount) public returns (bool) {
+        require(isPrescriptionOwner(_buyer, _pid), "Only owner or delegator can buy drugs");
+        Prescription storage prescription = prescriptions[_pid];
+        uint received = prescription.receivedMeds[_medicineName];
+        uint ordered = prescription.orderedMeds[_medicineName];
+        require(received.add(_amount) <= ordered, "Cannot buy more than ordered");
+        prescription.receivedMeds[_medicineName] = received.add(_amount);
+        prescription.assignedPharmacy.push(msg.sender);
+        prescription.hasPharmacy[msg.sender] = true;
     }
 
     // Readonly functions
@@ -167,16 +176,17 @@ contract PharmaChain {
         return (Role.Doctor == getRoleFromAddress(user));
     }
 
-    function isPrescriptionAssigner(address user , uint id) internal view returns (bool) {
+    function isPrescriptionAssigner(address user, uint id) internal view returns (bool) {
         return (prescriptions[id].assignedDoctor == user);
     }
 
-    function isPrescriptionOwner(address user , uint id) internal view returns (bool) {
+    function isPrescriptionOwner(address user, uint id) internal view returns (bool) {
         return (prescriptions[id].owner == user || prescriptions[id].delegate == user);
     }
 
-    function isPrescriptionPharmacy(address user , uint id) internal view returns (bool) {
-        return true;
+    function isPrescriptionPharmacy(address user, uint id) internal view returns (bool) {
+        Prescription memory prescription = prescriptions[id];
+        return prescription.hasPharmacy[user];
     }
 
     function getRoleFromAddress(address user) internal view returns (Role) {
