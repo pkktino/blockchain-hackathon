@@ -47,12 +47,12 @@ library SafeMath {
 
     function assert(bool assertion) internal {
         if (!assertion) {
-            revert();
+            revert("Invalid math operations");
         }
     }
 }
 
-contract Bank {
+contract PharmaChain {
     
     using SafeMath for uint;
     
@@ -61,7 +61,7 @@ contract Bank {
     mapping(address => uint256) accountOwner;
     mapping(address => uint) ownerAccountCount;
     
-    struct Account{
+    struct Account {
         string name;
         Role role;
     }
@@ -71,12 +71,14 @@ contract Bank {
         address delegate;
         address assignedDoctor;
         address[] assignedPharmacy;
-        mapping(string => uint) medicine;
-        mapping(string => uint) receivedMedicine;
+        string[] medicines;
         string remark;
+        mapping(string => uint) orderedMeds;
+        mapping(string => uint) receivedMeds;
     }
     
     Account[] accounts;
+    Prescription[] prescriptions;
     
     function registerAccount(string _name, string _role) public {
         require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
@@ -89,7 +91,41 @@ contract Bank {
         ownerAccountCount[msg.sender]++;
     }
 
+    function createPrescription(address _owner) public returns (uint) {
+        require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
+        uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
+        return (id);
+    }
+
+    function addMedicineToPrescription() public {
+    }
+
     // Helper functions
+    function isGoverment(address user) internal view returns (bool) {
+        return (Role.Goverment == getRoleFromAddress(user));
+    }
+
+    function isPatient(address user) internal view returns (bool) {
+        return (Role.Patient == getRoleFromAddress(user));
+    }
+
+    function isDrugStore(address user) internal view returns (bool) {
+        return (Role.DrugStore == getRoleFromAddress(user));
+    }
+
+    function isPharmacy(address user) internal view returns (bool) {
+        return (Role.Pharmacy == getRoleFromAddress(user));
+    }
+
+    function isDoctor(address user) internal view returns (bool) {
+        return (Role.Doctor == getRoleFromAddress(user));
+    }
+
+    function getRoleFromAddress(address user) internal view returns (Role) {
+        uint index = accountOwner[user];
+        return accounts[index].role;
+    }
+
     function getRole(string role) internal pure returns (Role) {
         if (compareStrings(role, "Goverment")) return Role.Goverment;
         if (compareStrings(role, "Patient"))   return Role.Patient;
