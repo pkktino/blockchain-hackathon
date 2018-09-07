@@ -1,5 +1,6 @@
 // solium-disable linebreak-style
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 /**
  * @title SafeMath
@@ -131,12 +132,17 @@ contract PharmaChain {
     }
 
     // Readonly functions
-    function getPrescription(uint id) public view returns (Prescription){
-        if (prescriptions[id] != nill) {
-            if (isGoverment(msg.sender)) return prescriptions[id];
-            else if(isPatient() && isPrescriptionOwner(msg.sender, id)) return prescriptions[id];
-            else if(isDoctor() && isPrescriptionAssigner(msg.sender, id)) return prescriptions[id];
-            // else if(isPharmacy() )
+    function getPrescription(uint id) public view returns (string, string, string[], uint[]){
+        if (id <= prescriptions.length) {
+            Prescription storage _data = prescriptions[id];
+            string memory _name = accounts[accountOwner[_data.owner]].name;
+            string memory _assignDoctor = accounts[accountOwner[_data.assignedDoctor]].name;
+            string[] memory _medicines = _data.medicines;
+            uint[] memory _orderedMeds;
+            for(uint i = 0 ; i < _medicines.length ; i++){
+                _orderedMeds[i] = _data.orderedMeds[_medicines[i]];
+            }
+            return (_name,_assignDoctor,_medicines,_orderedMeds);
         }
     }
 
