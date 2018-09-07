@@ -2,53 +2,66 @@
 pragma solidity ^0.4.24;
 
 /**
- * Math operations with safety checks
+ * @title SafeMath
+ * @dev Math operations with safety checks that revert on error
  */
 library SafeMath {
-    function mul(uint a, uint b) internal returns (uint) {
-        uint c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
-    }
 
-    function div(uint a, uint b) internal returns (uint) {
-        // assert(b > 0); // Solidity automatically throws when dividing by 0
-        uint c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-        return c;
-    }
-
-    function sub(uint a, uint b) internal returns (uint) {
-        assert(b <= a);
-        return a - b;
-    }
-
-    function add(uint a, uint b) internal returns (uint) {
-        uint c = a + b;
-        assert(c >= a);
-        return c;
-    }
-
-    function max64(uint64 a, uint64 b) internal view returns (uint64) {
-        return a >= b ? a : b;
-    }
-
-    function min64(uint64 a, uint64 b) internal view returns (uint64) {
-        return a < b ? a : b;
-    }
-
-    function max256(uint256 a, uint256 b) internal view returns (uint256) {
-        return a >= b ? a : b;
-    }
-
-    function min256(uint256 a, uint256 b) internal view returns (uint256) {
-        return a < b ? a : b;
-    }
-
-    function assert(bool assertion) internal {
-        if (!assertion) {
-            revert("Invalid math operations");
+    /**
+    * @dev Multiplies two numbers, reverts on overflow.
+    */
+    function mul(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
+        if (_a == 0) {
+            return 0;
         }
+
+        uint256 c = _a * _b;
+        require(c / _a == _b, "Invalid math");
+
+        return c;
+    }
+
+    /**
+    * @dev Integer division of two numbers truncating the quotient, reverts on division by zero.
+    */
+    function div(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        require(_b > 0, "Invalid math"); // Solidity only automatically asserts when dividing by 0
+        uint256 c = _a / _b;
+        // assert(_a == _b * c + _a % _b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    /**
+    * @dev Subtracts two numbers, reverts on overflow (i.e. if subtrahend is greater than minuend).
+    */
+    function sub(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        require(_b <= _a, "Invalid math");
+        uint256 c = _a - _b;
+
+        return c;
+    }
+
+    /**
+    * @dev Adds two numbers, reverts on overflow.
+    */
+    function add(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        uint256 c = _a + _b;
+        require(c >= _a, "Invalid math");
+
+        return c;
+    }
+
+    /**
+    * @dev Divides two numbers and returns the remainder (unsigned integer modulo),
+    * reverts when dividing by zero.
+    */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b != 0, "Invalid math");
+        return a % b;
     }
 }
 
@@ -105,8 +118,24 @@ contract PharmaChain {
             else if(isPharmacy() )
         }
     }
+    
+    function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public {
+        require(isDoctor(msg.sender), "Only doctor role is allowed to add medicine to prescriptions");
+        Prescription storage prescription = prescriptions[_id];
+        if (prescription.orderedMeds[_medicineName] <= 0) {
+            prescription.medicines.push(_medicineName);
+        }
+        prescription.orderedMeds[_medicineName].add(_amount);
+    }
 
-    function addMedicineToPrescription() public {
+    function setDelegator(uint _pid, address _delegator) public {
+        require(isPatient(msg.sender), "Only patient can set prescription delegator");
+        Prescription storage prescription = prescriptions[_pid];
+        require(prescription.owner == msg.sender, "Only owner can set delegator");
+        prescription.delegate = _delegator;
+    }
+
+    function sellMedicine(uint _pid, address _buyer, string _medicineName, uint amount) public {
     }
 
     // Helper functions
