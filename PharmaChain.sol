@@ -56,7 +56,7 @@ contract Bank {
     
     using SafeMath for uint;
     
-    enum Role { Goverment, Patient, DrugStore, Pharmacy, Doctor }
+    enum Role { Goverment, Patient, DrugStore, Pharmacy, Doctor, Invalid }
     
     mapping(address => uint256) accountOwner;
     mapping(address => uint) ownerAccountCount;
@@ -78,49 +78,30 @@ contract Bank {
     
     Account[] accounts;
     
-    function registerAccount(string _name) public{
-        require(ownerAccountCount[msg.sender] == 0);
-        uint id = accounts.push(Account(_name,0,0)) - 1;
+    function registerAccount(string _name, string _role) public {
+        require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
+        
+        Role role = getRole(_role);
+        require(role != Role.Invalid, "Invalid role");
+
+        uint id = accounts.push(Account(_name, role)) - 1;
         accountOwner[msg.sender] = id;
         ownerAccountCount[msg.sender]++;
     }
-    
-    function balanceOf() public view returns (uint256) {
-        uint currentId = accountOwner[msg.sender];
-        return accounts[currentId].balance;
+
+    // Helper functions
+    function getRole(string role) internal pure returns (Role) {
+        if (compareStrings(role, "Goverment")) return Role.Goverment;
+        if (compareStrings(role, "Patient"))   return Role.Patient;
+        if (compareStrings(role, "DrugStore")) return Role.DrugStore;
+        if (compareStrings(role, "Pharmacy"))  return Role.Pharmacy;
+        if (compareStrings(role, "Doctor"))    return Role.Doctor;
+        return Role.Invalid;
     }
-    
-    function increaseYear(uint256 year) public{
-        uint currentId = accountOwner[msg.sender];
-        accounts[currentId].year += year;
-        if(accounts[currentId].year >= 1){
-            for (uint i=0; i<accounts[currentId].year; i++) {
-                accounts[currentId].balance += ((accounts[currentId].balance*10)/100);
-            }
-        }
+
+    function compareStrings(string a, string b) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
-    
-    function depositMoney() public payable{
-        uint currentId = accountOwner[msg.sender];
-        accounts[currentId].balance = accounts[currentId].balance.add(msg.value);
-    }
-    
-    function withdrawMoney(uint256 amount) public{
-        uint currentId = accountOwner[msg.sender];
-        require(accounts[currentId].balance >= amount);
-        accounts[currentId].balance = accounts[currentId].balance.sub(amount);
-        msg.sender.transfer(amount);
-    }
-    
-    function displayAccountDetail() public view returns(
-        string _name,
-        uint256 _balance,
-        uint256 _year)
-    {
-        uint currentId = accountOwner[msg.sender];
-        _name = accounts[currentId].name;
-        _balance = accounts[currentId].balance;
-        _year = accounts[currentId].year;
-    }
+
 }
 
