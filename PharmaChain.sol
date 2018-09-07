@@ -97,6 +97,15 @@ contract PharmaChain {
         return (id);
     }
 
+    function getPrescription(uint id) public view returns (Prescription){
+        if(prescriptions[id] != nill){
+            if(isGoverment(msg.sender)) return prescriptions[id];
+            else if(isPatient() && isPrescriptionOwner(msg.sender, id)) return prescriptions[id];
+            else if(isDoctor() && isPrescriptionAssigner(msg.sender, id)) return prescriptions[id];
+            else if(isPharmacy() )
+        }
+    }
+
     function addMedicineToPrescription() public {
     }
 
@@ -119,6 +128,18 @@ contract PharmaChain {
 
     function isDoctor(address user) internal view returns (bool) {
         return (Role.Doctor == getRoleFromAddress(user));
+    }
+
+    function isPrescriptionAssigner(address user , uint id) internal view returns (bool) {
+        return (prescriptions[id].assignedDoctor == user);
+    }
+
+    function isPrescriptionOwner(address user , uint id) internal view returns (bool) {
+        return (prescriptions[id].owner == user || prescriptions[id].delegate == user);
+    }
+
+    function isPrescriptionPharmacy(address user , uint id) internal view returns (bool) {
+        return true;
     }
 
     function getRoleFromAddress(address user) internal view returns (Role) {
