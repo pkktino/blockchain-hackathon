@@ -109,7 +109,7 @@ contract PharmaChain {
         ownerAccountCount[msg.sender]++;
     }
 
-    function createPrescription(address _owner) public returns (uint) {
+    function createPrescription(address _owner) public hasRegistered returns (uint) {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
         addAddressToMap(msg.sender, id);
@@ -117,7 +117,7 @@ contract PharmaChain {
         return (id);
     }
     
-    function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public {
+    function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public hasRegistered {
         require(isDoctor(msg.sender), "Only doctor role is allowed to add medicine to prescriptions");
         require(isPrescriptionAssigner(msg.sender, _id), "Only assigned doctor can add medicine to prescriptions");
         if (prescriptions[_id].orderedMeds[_medicineName] <= 0) {
@@ -126,13 +126,13 @@ contract PharmaChain {
         prescriptions[_id].orderedMeds[_medicineName].add(_amount);
     }
 
-    function setDelegator(uint _pid, address _delegator) public {
+    function setDelegator(uint _pid, address _delegator) public hasRegistered {
         require(isPatient(msg.sender), "Only patient can set prescription delegator");
         require(prescriptions[_pid].owner == msg.sender, "Only owner can set delegator");
         prescriptions[_pid].delegate = _delegator;
     }
 
-    function sellMedicine(uint _pid, address _buyer, string _medicineName, uint _amount) public returns (bool) {
+    function sellMedicine(uint _pid, address _buyer, string _medicineName, uint _amount) public hasRegistered returns (bool) {
         require(isPrescriptionOwner(_buyer, _pid), "Only owner or delegator can buy drugs");
         uint received = prescriptions[_pid].receivedMeds[_medicineName];
         uint ordered = prescriptions[_pid].orderedMeds[_medicineName];
@@ -145,21 +145,24 @@ contract PharmaChain {
     }
 
     // Readonly functions
-    function userGetPrescription() public view returns (uint[]) {
+    function userGetPrescription() public hasRegistered view returns (uint[]) {
         return historyIdList[msg.sender];
     }
     
-    function getPrescription(uint id) public view returns (string, string, string[], uint[]){
-        if (id <= prescriptions.length) {
-            string memory _name = accounts[accountOwner[prescriptions[id].owner]].name;
-            string memory _assignDoctor = accounts[accountOwner[prescriptions[id].assignedDoctor]].name;
-            string[] memory _medicines = prescriptions[id].medicines;
-            uint[] memory _orderedMeds;
-            for(uint i = 0 ; i < _medicines.length ; i++){
-                _orderedMeds[i] = prescriptions[id].orderedMeds[_medicines[i]];
-            }
-            return (_name,_assignDoctor,_medicines,_orderedMeds);
+    function getPrescription(uint id) public hasRegistered view returns (string, string, string[], uint[], uint[]) {
+        require(id <= prescriptions.length, "Invalid id");
+        string memory _name = accounts[accountOwner[prescriptions[id].owner]].name;
+        string memory _assignDoctor = accounts[accountOwner[prescriptions[id].assignedDoctor]].name;
+        string[] memory _medicines = prescriptions[id].medicines;
+        uint[] memory _orderedMeds;
+        uint[] memory _receivedMeds;
+
+        for(uint i = 0 ; i < _medicines.length ; i++){
+            _orderedMeds[i] = prescriptions[id].orderedMeds[_medicines[i]];
+            _receivedMeds[i] = prescriptions[id].receivedMeds[_medicines[i]];
         }
+        
+        return (_name, _assignDoctor, _medicines, _orderedMeds, _receivedMeds);
     }
 
     // Helper functions
@@ -220,5 +223,9 @@ contract PharmaChain {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
+    modifier hasRegistered() {
+        require(ownerAccountCount[msg.sender] > 0, "User have not registered");
+        _;
+    }
 }
 
