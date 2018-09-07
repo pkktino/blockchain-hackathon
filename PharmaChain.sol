@@ -98,6 +98,8 @@ contract PharmaChain {
     mapping(address => uint[]) historyIdList;
     mapping(address => mapping(uint => bool)) isInHistory;
     
+    address[] patientList;
+    
     function registerAccount(string _name, string _role) public {
         require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
         
@@ -107,6 +109,10 @@ contract PharmaChain {
         uint id = accounts.push(Account(_name, role)) - 1;
         accountOwner[msg.sender] = id;
         ownerAccountCount[msg.sender]++;
+        
+        if (isPatient(msg.sender)) {
+            patientList.push(msg.sender);
+        }
     }
 
     function createPrescription(address _owner) public hasRegistered returns (uint) {
@@ -145,6 +151,10 @@ contract PharmaChain {
     }
 
     // Readonly functions
+    function getPatientList() public view returns (address[]) {
+        return patientList;
+    }
+    
     function userGetPrescription() public hasRegistered view returns (uint[]) {
         return historyIdList[msg.sender];
     }
