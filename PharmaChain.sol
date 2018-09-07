@@ -86,9 +86,11 @@ contract PharmaChain {
         address assignedDoctor;
         address[] assignedPharmacy;
         string[] medicines;
+        uint[] orderedMeds;
+        uint[] receivedMeds;
         string remark;
-        mapping(string => uint) orderedMeds;
-        mapping(string => uint) receivedMeds;
+        mapping(string => uint) medicineToId;
+        mapping(string => bool) hasMedicine;
         mapping(address => bool) hasPharmacy;
     }
     
@@ -118,7 +120,7 @@ contract PharmaChain {
     event CreatePrescriptionEvent(address _owner, uint prescriptionId);
     function createPrescription(address _owner) public hasRegistered returns (uint) {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
-        uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), "")) - 1;
+        uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), new uint[](0), new uint[](0), "")) - 1;
         addAddressToMap(msg.sender, id);
         addAddressToMap(_owner, id);
         emit CreatePrescriptionEvent(_owner, id);
@@ -128,10 +130,17 @@ contract PharmaChain {
     function addMedicineToPrescription(uint _id, string _medicineName, uint _amount) public hasRegistered {
         require(isDoctor(msg.sender), "Only doctor role is allowed to add medicine to prescriptions");
         require(isPrescriptionAssigner(msg.sender, _id), "Only assigned doctor can add medicine to prescriptions");
-        if (prescriptions[_id].orderedMeds[_medicineName] <= 0) {
-            prescriptions[_id].medicines.push(_medicineName);
+        
+        Prescription storage prescription = prescriptions[_id];
+        if (!(prescription.hasMedicine[_medicineName])) {
+            prescription.hasMedicine[_medicineName] = true;
+            prescription.medicineToId[_medicineName] = prescription.medicines.length;
+            prescription.medicines.push(_medicineName);
+            prescription.orderedMeds.push(0);
+            prescription.receivedMeds.push(0);
         }
-        prescriptions[_id].orderedMeds[_medicineName].add(_amount);
+        uint medId = prescription.medicineToId[_medicineName];
+        prescription.orderedMeds[medId] = prescription.orderedMeds[medId].add(_amount);
     }
 
     function setDelegator(uint _pid, address _delegator) public hasRegistered {
@@ -142,11 +151,16 @@ contract PharmaChain {
 
     function sellMedicine(uint _pid, address _buyer, string _medicineName, uint _amount) public hasRegistered returns (bool) {
         require(isPrescriptionOwner(_buyer, _pid), "Only owner or delegator can buy drugs");
-        uint received = prescriptions[_pid].receivedMeds[_medicineName];
-        uint ordered = prescriptions[_pid].orderedMeds[_medicineName];
-        require(received.add(_amount) <= ordered, "Cannot buy more than ordered");
+
         Prescription storage prescription = prescriptions[_pid];
-        prescription.receivedMeds[_medicineName] = received.add(_amount);
+        require(prescription.hasMedicine[_medicineName], "No drug in prescription");
+
+        uint medId = prescription.medicineToId[_medicineName];
+        uint received = prescription.receivedMeds[medId];
+        uint ordered = prescription.orderedMeds[medId];
+
+        require(received.add(_amount) <= ordered, "Cannot buy more than ordered");
+        prescription.receivedMeds[medId] = received.add(_amount);
         prescription.assignedPharmacy.push(msg.sender);
         prescription.hasPharmacy[msg.sender] = true;
         addAddressToMap(msg.sender, _pid);
@@ -164,18 +178,11 @@ contract PharmaChain {
     
     function getPrescription(uint id) public hasRegistered view returns (string, string, string[], uint[], uint[]) {
         require(id <= prescriptions.length, "Invalid id");
-        string memory _name = accounts[accountOwner[prescriptions[id].owner]].name;
-        string memory _assignDoctor = accounts[accountOwner[prescriptions[id].assignedDoctor]].name;
-        string[] memory _medicines = prescriptions[id].medicines;
-        uint[] memory _orderedMeds;
-        uint[] memory _receivedMeds;
-
-        for(uint i = 0 ; i < _medicines.length ; i++){
-            _orderedMeds[i] = prescriptions[id].orderedMeds[_medicines[i]];
-            _receivedMeds[i] = prescriptions[id].receivedMeds[_medicines[i]];
-        }
-        
-        return (_name, _assignDoctor, _medicines, _orderedMeds, _receivedMeds);
+        return (accounts[accountOwner[prescriptions[id].owner]].name,
+               accounts[accountOwner[prescriptions[id].assignedDoctor]].name, 
+               prescriptions[id].medicines,
+               prescriptions[id].orderedMeds, 
+               prescriptions[id].receivedMeds);
     }
 
     // Helper functions
