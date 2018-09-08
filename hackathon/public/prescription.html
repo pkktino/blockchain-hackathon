@@ -156,7 +156,12 @@
 
             console.log(data);
             console.log(sessionStorage.getItem("account"));
-            console.log(contract.createPrescription(patient, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear();
+
+            console.log(contract.createPrescription(patient, day, month, year, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
             setTimeout(function() {
                 var prescriptionID = contract.getLatestCreatePrescriptionId({ from : sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
                 for (let i = 0; i < data.length; i++) {

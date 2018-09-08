@@ -62,15 +62,20 @@
                                                 <th>ใบสั่งยาที่</th>
                                                 <th>วันที่ได้รับ</th>
                                                 <th>วันหมดอายุ</th>
+                                                <th></th>
                                             </tr>
                                         </table>`);
                     prescriptionList = contract.userGetPrescription({from: account});
                     for (let i = 0; i < prescriptionList.length; i++) {
                         let prescription = contract.getPrescription(prescriptionList[i].c[0], { from: account });
-                        $('#patient').append(`<tr onclick="goToDetail(this);">
+                        let prescriptionDate = contract.getPrescriptionDate(prescriptionList[i].c[0], { from: account });
+                        console.log(prescription);
+                        console.log(prescriptionDate);
+                        $('#patient').append(`<tr >
                                                 <td>${ prescriptionList[i].c[0] }</td>
-                                                <td>${ prescription[0] }</td>
-                                                <td>${ prescription[1] }</td>
+                                                <td>${ prescriptionDate[0].c[0] } / ${ prescriptionDate[1].c[0] }/ ${ prescriptionDate[2].c[0] }</td>
+                                                <td>${ prescriptionDate[3].c[0] } / ${ prescriptionDate[4].c[0] }/ ${ prescriptionDate[5].c[0] }</td>
+                                                <td><button class="button" onclick="goToDetail(`+ i + `);">Go To Detail</button></td>
                                             </tr>`);
                     }
                 }
@@ -126,8 +131,9 @@
         }
 
         function goToDetail(row) {
+            console.log(row);
             console.log($(row).index());
-            var prescription = contract.getPrescription(prescriptionList[$(row).index() - 1].c[0], { from: account });
+            var prescription = contract.getPrescription(prescriptionList[row].c[0], { from: account });
             console.log(prescription);
             sessionStorage.setItem("doctor", prescription[1])
 
