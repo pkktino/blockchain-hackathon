@@ -171,9 +171,8 @@ contract PharmaChain {
     }
 
     // Readonly functions
-    function getLatestCreatePrescriptionId() public view returns (uint) {
-        createDummyPrescription();
-        return latestCreatePrescriptionId[msg.sender];
+    function getLatestCreatePrescriptionId(address acc) public view returns (uint) {
+        return latestCreatePrescriptionId[acc];
     }
 
     function getPatientList() public view returns (address[]) {
