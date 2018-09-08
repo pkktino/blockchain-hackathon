@@ -143,20 +143,13 @@
                     data.push(cols);
                 }
             });
-            // doc = $('#inputDocAddress')[0].value;
-            // patient = $('#inputPatientAddress')[0].value;
-            prescription = {
-                doctorAddress: doc,
-                patientAddress: patient,
-                data: data,
-                date: new Date()
-            };
-            console.log(patient);
-            console.log(contract);
+            
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear();
 
-            console.log(data);
-
-            console.log(contract.createPrescription(patient, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
+            console.log(contract.createPrescription(patient, day, month, year, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
             setTimeout(function() {
                 var prescriptionID = contract.getLatestCreatePrescriptionId({ from : sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
                 for (let i = 0; i < data.length; i++) {
