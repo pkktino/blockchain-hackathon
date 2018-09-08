@@ -1,2 +1,2 @@
 const providerUrl = 'http://127.0.0.1:47777';
-const tokenAddr = '0xf6e23379387e37687b8698e75fe2054508925f26';
+const tokenAddr = '0x649d64d7895bddbcd4b48c647e97f6d9d846367f';

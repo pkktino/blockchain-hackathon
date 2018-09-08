@@ -155,7 +155,7 @@
             console.log(contract);
 
             console.log(data);
-
+            console.log(sessionStorage.getItem("account"));
             console.log(contract.createPrescription(patient, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
             setTimeout(function() {
                 var prescriptionID = contract.getLatestCreatePrescriptionId({ from : sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
