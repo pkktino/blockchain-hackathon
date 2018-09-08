@@ -111,7 +111,6 @@ contract PharmaChain {
     mapping(address => uint) latestCreatePrescriptionId;
     
     address[] patientList;
-    address[] governmentList;
     
     function registerAccount(string _name, string _role) public {
         require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
@@ -126,10 +125,6 @@ contract PharmaChain {
         if (isPatient(msg.sender)) {
             patientList.push(msg.sender);
         }
-
-        if (isGoverment(msg.sender)) {
-            governmentList.push(msg.sender);
-        }
     }
 
     function createPrescription(address _owner, uint day, uint month, uint year) public hasRegistered {
@@ -140,9 +135,6 @@ contract PharmaChain {
         uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), new uint[](0), new uint[](0), "", Date(day, month, year), Date(day, month, year+1))) - 1;
         addAddressToMap(msg.sender, id);
         addAddressToMap(_owner, id);
-        for (uint i = 0; i < governmentList.length; i++) {
-            addAddressToMap(governmentList[i], id);
-        }
         latestCreatePrescriptionId[msg.sender] = id;
     }
     
@@ -196,6 +188,12 @@ contract PharmaChain {
     }
     
     function userGetPrescription() public hasRegistered view returns (uint[]) {
+        if (isGoverment(msg.sender)) {
+            uint[] ret = new uint[](2);
+            ret[0] = -1;
+            ret[1] = prescriptions.length;
+            return ret;
+        }
         return historyIdList[msg.sender];
     }
     

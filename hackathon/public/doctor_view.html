@@ -21,6 +21,76 @@
         <div id="history"></div>
     </div>
 
+    <div class="modal fade" id="createPrescription" tabindex="-1" role="dialog" aria-labelledby="createPrescription" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="createPrescription">สร้างใบสั่งยา</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+                <select class="custom-select" id="patients"></select>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+              <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="createPrescription();">สร้างใบสั่งยา</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="addMedicine" tabindex="-1" role="dialog" aria-labelledby="addMedicine" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addMedicine">สั่งยาเพิ่ม</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <td>
+                    <input type="text" id="ya-name" class="form-control ya" required="" autofocus="" placeholder="ชื่อยา">
+                </td>
+                <td>
+                    <input type="text" id="ya-amount" class="form-control ya" required="" autofocus="" placeholder="จำนวน">
+                </td>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="addMedicine();">สร้างใบสั่งยา</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="removeMedicine" tabindex="-1" role="dialog" aria-labelledby="removeMedicine" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="removeMedicine">ลบยา</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <td>
+                      <input type="text" id="ya-name" class="form-control ya" required="" autofocus="" placeholder="ชื่อยา">
+                  </td>
+                  <td>
+                      <input type="text" id="ya-amount" class="form-control ya" required="" autofocus="" placeholder="จำนวน">
+                  </td>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                  <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="removeMedicine();">สร้างใบสั่งยา</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
     <!-- Bootstrap -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -39,13 +109,22 @@
         var prescriptionList;
         var contract;
         var account;
+        var lastClicked = -1;
 
         $(function () {
             initWeb3();
             web3.eth.defaultAccount = web3.eth.accounts[0]
             web3.setProvider(new web3.providers.HttpProvider(providerUrl));
             getData();
+            getPatient();
         })
+
+        function getPatient() {
+            var patientList = contract.getPatientList();
+            for (let i = 0; i < patientList.length; i++) {
+                $('#patients').append(`<option value="${patientList[i]}">${patientList[i]}</option>`);
+            }
+        }
 
         function getData() {
             var role = ['รัฐบาล', 'คนไข้', 'ร้านขายยา', 'เภสัชกร', 'แพทย์'];
@@ -55,24 +134,33 @@
             contract = getContract(contractIndex);
             $('#userName').append(`<h1>สวัสดี คุณ ${sessionStorage.getItem("name")} (${role[sessionStorage.getItem("role")]})</h1>`)
             if (sessionStorage.getItem("role") == 1 || sessionStorage.getItem("role") == 4) {
-                $('#history').append(`<h3>ประวัติการสั่งยา</h3>`);
-                if (sessionStorage.getItem("role") == 1) {
+                $('#history').append(`<h3>ประวัติการสั่งยา</h3><td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createPrescription">สร้างใบสั่งยา</button></td>`);
+                if (sessionStorage.getItem("role") == 4) {
                     $('#history').append(`<table class="table" id="patient">
                                             <tr>
                                                 <th>ใบสั่งยาที่</th>
-                                                <th>วันที่ได้รับ</th>
-                                                <th>วันหมดอายุ</th>
-                                                <th>เพิ่มรายการ</th>
+                                                <th>ชื่อคนไข้</th>
+                                                <th>วันที่สร้าง</th>
+                                                <th>แก้ไขรายการ</th>
+                                                <th>ดูรายละเอียด</th>
                                             </tr>
                                         </table>`);
                     prescriptionList = contract.userGetPrescription({from: account});
-                    for (let i = 0; i < prescriptionList.length; i++) {
+                    console.log(prescriptionList);
+                    for (let i = prescriptionList.length - 1; i >= 0; i--) {
                         let prescription = contract.getPrescription(prescriptionList[i].c[0], { from: account });
+                        let prescriptionDate = contract.getPrescriptionDate(prescriptionList[i].c[0], { from: account });
                         $('#patient').append(`<tr>
                                                 <td>${ prescriptionList[i].c[0] }</td>
                                                 <td>${ prescription[0] }</td>
-                                                <td>${ prescription[1] }</td>
-                                                <td><button onclick="goToDetail(` + i + `);">เพิ่มรายการ</button></td>
+                                                <td>${ prescriptionDate[0] + '/' + prescriptionDate[1] + '/' + prescriptionDate[2] }</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addMedicine" onclick="setLastClicked(` + i + `)">เพิ่มรายการ</button>
+                                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#removeMedicine" onclick="setLastClicked(` + i + `)">ลดรายการ</button>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-primary" onclick="goToDetail(` + i + `);">ดูรายละเอียด</button>
+                                                </td>
                                             </tr>`);
                     }
                 }
@@ -128,13 +216,74 @@
         }
 
         function goToDetail(row) {
-            console.log(row);
-            // console.log($(row).index());
-            // var prescription = contract.getPrescription(prescriptionList[$(row).index() - 1].c[0], { from: account });
-            // console.log(prescription);
-            // sessionStorage.setItem("doctor", prescription[1])
+            // TODO: Fix this function
 
-            // window.location = "http://localhost:4000/patient_view_detail.html";
+            console.log(row);
+            var prescription = contract.getPrescription(prescriptionList[row].c[0], { from: account });
+            console.log(prescription);
+            sessionStorage.setItem("doctor", prescription[1])
+
+            window.location = "patient_view_detail.html";
+        }
+
+        function setLastClicked(row) {
+            lastClicked = row;
+        }
+
+        function addMedicine() {
+            var row = lastClicked;
+            var name = $('#ya-name').val();
+            var amount =$('#ya-amount').val();
+            contract.addMedicineToPrescription(prescriptionList[row].c[0], name, amount, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
+            // TODO - Add Medicine Here
+            console.log("ADD MED");
+        }
+        
+        function removeMedicine() {
+            var row = setLastClicked;
+            var name = $('#ya-name').val();
+            var amount =$('#ya-amount').val();
+            // contract.addMedicineToPrescription(prescriptionList[row].c[0], name, amount, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
+            // TODO - Add Medicine Here
+            console.log("REMOVE MED");
+        }
+
+        function createPrescription() {
+            // TODO - Create prescription here
+            var prescription;
+            var data = [];
+            var doc;
+            var patient = $('#patients').find(":selected").val();
+            var table = $('#ya-zone');
+            table.find('tr').each(function (rowIndex, r) {
+                if (rowIndex !== 0) {
+                    var cols = [];
+                    $(this).find('td').each(function (colIndex, c) {
+                        cols.push($(c).find('input')[0].value);
+                    });
+                    data.push(cols);
+                }
+            });
+            // doc = $('#inputDocAddress')[0].value;
+            // patient = $('#inputPatientAddress')[0].value;
+            prescription = {
+                doctorAddress: doc,
+                patientAddress: patient,
+                data: data,
+                date: new Date()
+            };
+            console.log(patient);
+            console.log(contract);
+
+            console.log(data);
+            console.log(sessionStorage.getItem("account"));
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear();
+
+            console.log(contract.createPrescription(patient, day, month, year, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
+            console.log("CREATE");
         }
 
     </script>
