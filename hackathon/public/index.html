@@ -24,6 +24,7 @@
             </div>
         </form>
         <button class="btn btn-lg btn-primary btn-block" onclick="login();">Log In</button>
+        <button class="btn btn-lg btn-primary btn-block" onclick="register();">Not Registered? Click here!</button>
     </div>
 
 
@@ -36,6 +37,7 @@
         crossorigin="anonymous"></script>
 
     <!-- Web 3 -->
+    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
     <script src="web3.js"></script>
 
@@ -44,7 +46,7 @@
         $(function () {
             initWeb3();
             web3.eth.defaultAccount = web3.eth.accounts[0]
-            web3.setProvider(new web3.providers.HttpProvider('HTTP://127.0.0.1:8546'));
+            web3.setProvider(new web3.providers.HttpProvider(providerUrl));
 
             for (let i = 0; i < web3.eth.accounts.length; i++) {
                 $('#account').append(`<option value="${i}">${web3.eth.accounts[i]}</option>`)
@@ -66,19 +68,24 @@
                     case 0: // Government
                         break;
                     case 1: // Patient
-                        window.location = "http://localhost:4000/patient_view.html";
+                        window.location = "patient_view.html";
                         break;
                     case 2: // Drug store
                         break;
                     case 3: // Pharmacy
+                        window.location = "pharmacy_sell.html";
                         break;
                     case 4: // Doctor
-                        window.location = "http://localhost:4000/prescription.html";
+                        window.location = "prescription.html";
                         break;
                 }
             } catch (ex) {
                 alert('บัญชีนี้ยังไม่เคยลงทะเบียนในระบบ')
             }
+        }
+
+        function register() {
+            window.location = "register.html";
         }
     </script>
 </body>

@@ -67,6 +67,7 @@
         crossorigin="anonymous"></script>
 
     <!-- Web 3 -->
+    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
     <script src="web3.js"></script>
 
@@ -74,7 +75,7 @@
         $(function () {
             initWeb3();
             web3.eth.defaultAccount = web3.eth.accounts[0]
-            web3.setProvider(new web3.providers.HttpProvider('HTTP://127.0.0.1:8546'));
+            web3.setProvider(new web3.providers.HttpProvider(providerUrl));
 
             for (let i = 0; i < web3.eth.accounts.length; i++) {
                 $('#account').append(`<option value="${ i }">${web3.eth.accounts[i]}</option>`)

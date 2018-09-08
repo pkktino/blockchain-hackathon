@@ -1,7 +1,7 @@
 var account = [];
 var _web3 = undefined;
 var interestRate = 1.015;
-var tokenAddr = "0x3c2becbc7ec249553036c6d65c8672b7587621c5"
+// var tokenAddr = "0x3c2becbc7ec249553036c6d65c8672b7587621c5"
 
 function getSmartContract() {
     var abi = [
@@ -246,7 +246,7 @@ function initWeb3() {
         web3 = new Web3(web3.currentProvider);
     } else {
         // set the provider you want from Web3.providers
-        web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8546"));
+        web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
     }
     console.log('web3!', web3)
 }
