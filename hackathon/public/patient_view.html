@@ -131,13 +131,15 @@
         }
 
         function goToDetail(row) {
-            console.log(row);
-            console.log($(row).index());
+            //console.log(prescriptionList);
             var prescription = contract.getPrescription(prescriptionList[row].c[0], { from: account });
             console.log(prescription);
             sessionStorage.setItem("doctor", prescription[1])
+            sessionStorage.setItem("medicineName", prescription[2]);
+            sessionStorage.setItem("assigned", prescription[3]);
+            sessionStorage.setItem("received", prescription[4]);
 
-            window.location = "http://localhost:4000/patient_view_detail.html";
+            // window.location = "http://localhost:4000/patient_view_detail.html";
         }
 
     </script>

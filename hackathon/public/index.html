@@ -66,6 +66,7 @@
                 sessionStorage.setItem("role", detail[1].c[0]);
                 switch (detail[1].c[0]) {
                     case 0: // Government
+                        window.location = "patient_view.html";
                         break;
                     case 1: // Patient
                         window.location = "patient_view.html";
