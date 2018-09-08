@@ -172,6 +172,7 @@ contract PharmaChain {
 
     // Readonly functions
     function getLatestCreatePrescriptionId() public view returns (uint) {
+        createDummyPrescription();
         return latestCreatePrescriptionId[msg.sender];
     }
 
@@ -190,6 +191,11 @@ contract PharmaChain {
                 prescriptions[id].medicines,
                 prescriptions[id].orderedMeds, 
                 prescriptions[id].receivedMeds);
+    }
+    
+    function getUserDetail() public hasRegistered view returns (string, Role) {
+        uint id = accountOwner[msg.sender];
+        return (accounts[id].name, accounts[id].role);
     }
 
     // Helper functions
