@@ -199,15 +199,19 @@ contract PharmaChain {
         return historyIdList[msg.sender];
     }
     
-    function getPrescription(uint id) public hasRegistered view returns (string, string, string[], uint[], uint[], Date, Date) {
+    function getPrescription(uint id) public hasRegistered view returns (string, string, string[], uint[], uint[]) {
         require(id <= prescriptions.length, "Invalid id");
         return (accounts[accountOwner[prescriptions[id].owner]].name,
                 accounts[accountOwner[prescriptions[id].assignedDoctor]].name, 
                 prescriptions[id].medicines,
                 prescriptions[id].orderedMeds, 
-                prescriptions[id].receivedMeds,
-                prescriptions[id].orderedDate,
-                prescriptions[id].expiredDate);
+                prescriptions[id].receivedMeds);
+    }
+    
+    function getPrescriptionDate(uint id) public hasRegistered view returns (uint, uint, uint, uint, uint, uint) {
+        require(id <= prescriptions.length, "Invalid id");
+        return (prescriptions[id].orderedDate.day, prescriptions[id].orderedDate.month, prescriptions[id].orderedDate.year,
+                prescriptions[id].expiredDate.day, prescriptions[id].expiredDate.month, prescriptions[id].expiredDate.year);
     }
     
     function getUserDetail() public hasRegistered view returns (string, Role) {

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>View Prescription (Patient)</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <style>
+        .col-5 {
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body class="center">
+    <div class="container container-fluid" id="container">
+        <div id="userName"></div>
+        <div id="history"></div>
+    </div>
+
+
+    <!-- Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+    <!-- Web 3 -->
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="web3.js"></script>
+
+    <script>
+        var prescriptionList;
+        var contract;
+        var account;
+
+        $(function () {
+            initWeb3();
+            web3.eth.defaultAccount = web3.eth.accounts[0]
+            web3.setProvider(new web3.providers.HttpProvider(providerUrl));
+            getData();
+        })
+
+        function getData() {
+            var role = ['รัฐบาล', 'คนไข้', 'ร้านขายยา', 'เภสัชกร', 'แพทย์'];
+            var contractIndex = sessionStorage.getItem("contract");
+            account = sessionStorage.getItem("account");
+            console.log('account', account);
+            contract = getContract(contractIndex);
+            $('#userName').append(`<h1>สวัสดี คุณ ${sessionStorage.getItem("name")} (${role[sessionStorage.getItem("role")]})</h1>`)
+            if (sessionStorage.getItem("role") == 1 || sessionStorage.getItem("role") == 4) {
+                $('#history').append(`<h3>ประวัติการสั่งยา</h3>`);
+                if (sessionStorage.getItem("role") == 1) {
+                    $('#history').append(`<table class="table" id="patient">
+                                            <tr>
+                                                <th>ใบสั่งยาที่</th>
+                                                <th>วันที่ได้รับ</th>
+                                                <th>วันหมดอายุ</th>
+                                                <th>เพิ่มรายการ</th>
+                                            </tr>
+                                        </table>`);
+                    prescriptionList = contract.userGetPrescription({from: account});
+                    for (let i = 0; i < prescriptionList.length; i++) {
+                        let prescription = contract.getPrescription(prescriptionList[i].c[0], { from: account });
+                        $('#patient').append(`<tr>
+                                                <td>${ prescriptionList[i].c[0] }</td>
+                                                <td>${ prescription[0] }</td>
+                                                <td>${ prescription[1] }</td>
+                                                <td><button onclick="goToDetail(` + i + `);">เพิ่มรายการ</button></td>
+                                            </tr>`);
+                    }
+                }
+            } else if (sessionStorage.getItem("role") == 2 || sessionStorage.getItem("role") == 3){
+                $('#history').append('<h3>ประวัติการจ่ายยา</h3>');
+            } else {
+                $('#history').append('<h3>ประวัติทั้งหมด</h3>');
+            }
+            // for (let i = 0; i < fakeData.length; i++) {
+            //     $('#container').append(`
+            //         <div class="card" style="margin-bottom: 10px;">
+            //             <div class="card-body">
+            //                 <div class="row">
+            //                     <div class="col-5">
+            //                         <h5><span>ID: </span>${fakeData[i].id}</h5>
+            //                     </div>
+            //                     <div class="col-5">
+            //                         <h5><span>Name: </span>${fakeData[i].name}</h5>
+            //                     </div>
+            //                 </div>
+            //                 <div class="row">
+            //                     <div class="col-5">
+            //                         <h5><span>วันที่: </span>${fakeData[i].date}</h5>
+            //                     </div>
+            //                     <div class="col-5">
+            //                         <h5><span>ผู้จ่ายยา (หมอ): </span>${fakeData[i].assigned}</h5>
+            //                     </div>
+            //                 </div>
+            //                 <div class="row">
+            //                     <div class="col-5">
+            //                         <h6>รายการยา</h6>
+            //                         <table class="table" id="yas-${i}">
+            //                             <tr>
+            //                                 <th>ยา</th>
+            //                                 <th>จำนวน</th>
+            //                             </tr>
+            //                         </table>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `);
+            //     for (let j = 0; j < fakeData[i].yas.length; j++) {
+            //         $('#yas-' + i).append(`
+            //             <tr>
+            //                 <td>${fakeData[i].yas[j].ya}</td>
+            //                 <td>${fakeData[i].yas[j].amount}</td>
+            //             </tr>
+            //         `);
+            //     }
+            // }
+
+        }
+
+        function goToDetail(row) {
+            console.log(row);
+            // console.log($(row).index());
+            // var prescription = contract.getPrescription(prescriptionList[$(row).index() - 1].c[0], { from: account });
+            // console.log(prescription);
+            // sessionStorage.setItem("doctor", prescription[1])
+
+            // window.location = "http://localhost:4000/patient_view_detail.html";
+        }
+
+    </script>
+</body>
+
+</html>
