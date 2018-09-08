@@ -23,7 +23,7 @@
         </div>
         <div class="detail">
             <div id="seller"></div>
-            <table class="table">
+            <table class="table" id="patient">
                 <tr>
                     <th>ยา</th>
                     <th>ได้รับแล้ว</th>
@@ -62,6 +62,9 @@
         function getData() {
             var role = ['รัฐบาล', 'คนไข้', 'ร้านขายยา', 'เภสัชกร', 'แพทย์'];
             var contractIndex = sessionStorage.getItem("contract");
+            var medicineNames = sessionStorage.getItem("medicineName").split(',');
+            var receiveDate = sessionStorage.getItem("received").split(',');
+            var expiredDate = sessionStorage.getItem("assigned").split(',');
             account = sessionStorage.getItem("account");
             contract = getContract(contractIndex);
             $('#userName').append(`<h1>ชื่อ ${sessionStorage.getItem("name")} </h1>`);
@@ -69,22 +72,19 @@
             if (sessionStorage.getItem("role") == 1 || sessionStorage.getItem("role") == 4) {
                 $('#history').append(`<h3>ประวัติการสั่งยา</h3>`);
                 if (sessionStorage.getItem("role") == 1) {
-                    $('#history').append(`<table class="table" id="patient">
-                                            <tr>
-                                                <th>ใบสั่งยาที่</th>
-                                                <th>วันที่ได้รับ</th>
-                                                <th>วันหมดอายุ</th>
-                                            </tr>
-                                        </table>`);
                     prescriptionList = contract.userGetPrescription({ from: account });
-                    for (let i = 0; i < prescriptionList.length; i++) {
-                        let prescription = contract.getPrescription(prescriptionList[i].c[0], { from: account });
-                        $('#patient').append(`<tr onclick="goToDetail(this);">
-                                                <td>${ prescriptionList[i].c[0]}</td>
-                                                <td>${ prescription[0]}</td>
-                                                <td>${ prescription[1]}</td>
+                    // for (let i = 0; i < prescriptionList.length; i++) {
+                    //     let prescription = contract.getPrescription(prescriptionList[i].c[0], { from: account });
+                    //     console.log(prescription);
+                        for (let j = 0; j < medicineNames.length; j++) {
+                            $('#patient').append(`<tr onclick="goToDetail(this);">
+                                                <td>${ medicineNames[j]}</td>
+                                                <td>${ receiveDate[j]}</td>
+                                                <td>${ expiredDate[j]}</td>
                                             </tr>`);
-                    }
+                        }
+
+                    // }
                 }
             } else if (sessionStorage.getItem("role") == 2 || sessionStorage.getItem("role") == 3) {
                 $('#history').append('<h3>ประวัติการจ่ายยา</h3>');
