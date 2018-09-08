@@ -155,11 +155,11 @@
 
             console.log(data);
 
-            console.log(contract.createPrescription(patient, { from: localStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
+            console.log(contract.createPrescription(patient, { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
             setTimeout(function() {
-                var prescriptionID = contract.getLatestCreatePrescriptionId({ from : localStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
+                var prescriptionID = contract.getLatestCreatePrescriptionId({ from : sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000});
                 for (let i = 0; i < data.length; i++) {
-                    console.log(contract.addMedicineToPrescription(prescriptionID.c[0], data[i][0], data[i][1], { from: localStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
+                    console.log(contract.addMedicineToPrescription(prescriptionID.c[0], data[i][0], data[i][1], { from: sessionStorage.getItem("account"), gas: 4712388, gasPrice: 100000000000}));
                 }
                 console.log(prescriptionID);
             }, 1000);

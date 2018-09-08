@@ -50,6 +50,7 @@
             var role = ['รัฐบาล', 'คนไข้', 'ร้านขายยา', 'เภสัชกร', 'แพทย์'];
             var contractIndex = sessionStorage.getItem("contract");
             account = sessionStorage.getItem("account");
+            console.log('account', account);
             contract = getContract(contractIndex);
             $('#userName').append(`<h1>สวัสดี คุณ ${sessionStorage.getItem("name")} (${role[sessionStorage.getItem("role")]})</h1>`)
             if (sessionStorage.getItem("role") == 1 || sessionStorage.getItem("role") == 4) {
