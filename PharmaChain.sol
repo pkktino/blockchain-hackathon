@@ -79,6 +79,12 @@ contract PharmaChain {
         string name;
         Role role;
     }
+
+    struct Date {
+        uint day;
+        uint month;
+        uint year;
+    }
     
     struct Prescription {
         address owner;
@@ -89,6 +95,8 @@ contract PharmaChain {
         uint[] orderedMeds;
         uint[] receivedMeds;
         string remark;
+        Date orderedDate;
+        Date expiredDate;
         mapping(string => uint) medicineToId;
         mapping(string => bool) hasMedicine;
         mapping(address => bool) hasPharmacy;
@@ -103,6 +111,7 @@ contract PharmaChain {
     mapping(address => uint) latestCreatePrescriptionId;
     
     address[] patientList;
+    address[] governmentList;
     
     function registerAccount(string _name, string _role) public {
         require(ownerAccountCount[msg.sender] == 0, "Sender already has an account");
@@ -117,16 +126,23 @@ contract PharmaChain {
         if (isPatient(msg.sender)) {
             patientList.push(msg.sender);
         }
+
+        if (isGoverment(msg.sender)) {
+            governmentList.push(msg.sender);
+        }
     }
 
-    function createPrescription(address _owner) public hasRegistered {
+    function createPrescription(address _owner, uint day, uint month, uint year) public hasRegistered {
         require(isDoctor(msg.sender), "Only doctor role is allowed to create prescriptions");
         if (prescriptions.length == 0) {
             createDummyPrescription();
         }
-        uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), new uint[](0), new uint[](0), "")) - 1;
+        uint id = prescriptions.push(Prescription(_owner, 0, msg.sender, new address[](0), new string[](0), new uint[](0), new uint[](0), "", Date(day, month, year), Date(day, month, year+1))) - 1;
         addAddressToMap(msg.sender, id);
         addAddressToMap(_owner, id);
+        for (uint i = 0; i < governmentList.length; i++) {
+            addAddressToMap(governmentList[i], id);
+        }
         latestCreatePrescriptionId[msg.sender] = id;
     }
     
@@ -200,7 +216,7 @@ contract PharmaChain {
     // Helper functions
     function createDummyPrescription() internal {
         require(prescriptions.length == 0, "Cannot create more dummy prescription");
-        prescriptions.push(Prescription(0, 0, 0, new address[](0), new string[](0), new uint[](0), new uint[](0), ""));
+        prescriptions.push(Prescription(0, 0, 0, new address[](0), new string[](0), new uint[](0), new uint[](0), "", Date(0, 0, 0), Date(0, 0, 0)));
     }
 
     function addAddressToMap(address user, uint id) internal {
